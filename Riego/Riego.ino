@@ -38,31 +38,21 @@ const int LED_INTERNO = 2;       // D4 - LED integrado
 WiFiClientSecure client;
 Adafruit_BMP280 bmp;
 
+/* Trasladar a cuda
+
 // ===== VARIABLES DE SENSORES =====
 float temperatura = 0;
 float presion = 0;
 float luz = 0;
 int humedadSuelo = 0;
 int humedadPorcentaje = 0;
-bool riegoActivo = false;
+bool riegoActivo = false;*/
 
 // ===== VARIABLES DE TIEMPO =====
 unsigned long ultimoEnvio = 0;
 const long INTERVALO_ENVIO = 30000; // 30 segundos
 unsigned long tiempoInicioRiego = 0;
 unsigned long tiempoTotalRiego = 0; // En milisegundos
-
-// ===== UMBRALES DE RIEGO - MODO DÍA (6:00 - 18:00) =====
-const float TEMP_MAX_DIA = 30.0;      // °C - No regar si temp > 30°C
-const float LUZ_MAX_DIA = 50000.0;    // Lux - No regar si luz solar muy fuerte
-const int HUMEDAD_MIN_DIA = 35;       // % - Activar riego si < 35%
-
-// ===== UMBRALES DE RIEGO - MODO NOCHE (18:00 - 6:00) =====
-const float TEMP_MIN_NOCHE = 12.0;    // °C - No regar si temp < 12°C
-const int HUMEDAD_MIN_NOCHE = 30;     // % - Activar riego si < 30%
-
-// ===== UMBRAL COMÚN =====
-const int HUMEDAD_CANCELAR = 70;      // % - Cancelar riego si > 70%
 
 // ===== CONSTANTES DE SIMULACIÓN =====
 const float CAUDAL_SIMULADO = 1.5;    // Litros/minuto
@@ -178,8 +168,9 @@ bool esDia() {
   return (hora >= 6 && hora < 18);
 }
 
+// Ahora se va usar V9 para evitar intergerencias con el chatbox
 // ===== CONTROL MANUAL BLYNK =====
-BLYNK_WRITE(V0) {
+BLYNK_WRITE(V9) {
   int value = param.asInt();
   if (value == 1) {
     activarRiego();
@@ -373,6 +364,9 @@ void enviarGoogleSheets() {
   
   client.stop();
 }
+
+
+/* Se traslada a cuda
 // ===== LÓGICA DE RIEGO INTELIGENTE =====
 void evaluarRiego() {
   bool debeRegar = false;
@@ -419,7 +413,7 @@ void evaluarRiego() {
     desactivarRiego();
     Serial.println("🛑 RIEGO DESACTIVADO: " + razon);
   }
-}
+}*/
 
 // ===== ACTIVAR RIEGO =====
 void activarRiego() {
@@ -458,6 +452,11 @@ void desactivarRiego() {
   digitalWrite(LED_INTERNO, LOW);
   riegoActivo = false;
   Blynk.virtualWrite(V0, 0);
+}
+
+void ejecutarComando(String comando) {
+  if (comando == "ACTIVAR_RIEGO") activarRiego();
+  else if (comando == "DESACTIVAR_RIEGO") desactivarRiego();
 }
 
 // ===== LOOP PRINCIPAL =====
