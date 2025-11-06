@@ -1,3 +1,5 @@
+// Riego/Riego.ino
+
 /******************************************************
 * Universidad del Valle de Guatemala
 * Sistema de Riego Inteligente - Versión Final
@@ -6,9 +8,6 @@
 *******************************************************/
 
 // ===== CONFIGURACIÓN BLYNK =====
-#define BLYNK_TEMPLATE_ID "TMPL2EYZWJiJP"
-#define BLYNK_TEMPLATE_NAME "CONTROL LED"
-#define BLYNK_AUTH_TOKEN "H8Saafs-gCgDHx5JjC7doWJRGjkPZczp"
 #define BLYNK_PRINT Serial
 
 // ===== LIBRERÍAS =====
@@ -20,14 +19,16 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BMP280.h>
 #include <time.h>
+#include <FS.h>
+#include <ArduinoJson.h>
 
 // ===== CREDENCIALES WIFI =====
-char auth[] = BLYNK_AUTH_TOKEN;
-char ssid[] = "gnicoool";
-char pass[] = "gironJ12";
+char auth[50];
+char ssid[50];
+char pass[50];
 
 // ===== GOOGLE SHEETS =====
-String GAS_ID = "AKfycbyZzibz7ylOoFRXfCum_eJkePaoUsU8vywMmqS2IebXjrNQ7hvLVJYyH6aQNKz1NsR_";
+String GAS_ID;
 
 // ===== PINES =====
 const int PIN_RIEGO = 14;        // D5 - Relé o LED de riego
@@ -62,6 +63,54 @@ const float POTENCIA_SIMULADA = 15.0; // Watts
 float aguaConsumidaDiaria = 0;        // Litros
 float energiaConsumidaDiaria = 0;     // Wh (Watt-hora)
 
+void cargarCredenciales() {
+  File file = SPIFFS.open("/credenciales.json", "r");
+  if (!file) {
+    Serial.println("No se encontró credenciales.json");
+    return;
+  }
+  StaticJsonDocument<512> doc;
+  DeserializationError error = deserializeJson(doc, file);
+  if (error) {
+    Serial.println("Error al leer credenciales.json");
+    return;
+  }
+
+  strcpy(ssid, doc["wifi"]["ssid"]);
+  strcpy(pass, doc["wifi"]["password"]);
+  strcpy(auth, doc["blynk"]["auth_token"]);
+  GAS_ID = doc["google_sheets"]["script_id"].as<String>();
+
+  file.close();
+  Serial.println("Credenciales cargadas desde JSON");
+}
+
+void cargarUmbrales() {
+  File file = SPIFFS.open("/umbrales.json", "r");
+  if (!file) {
+    Serial.println("No se encontró umbrales.json");
+    return;
+  }
+  StaticJsonDocument<512> doc;
+  DeserializationError error = deserializeJson(doc, file);
+  if (error) {
+    Serial.println("Error al leer umbrales.json");
+    return;
+  }
+
+  TEMP_MAX_DIA = doc["dia"]["temp_max"];
+  LUZ_MAX_DIA = doc["dia"]["luz_max"];
+  HUMEDAD_MIN_DIA = doc["dia"]["humedad_min"];
+  TEMP_MIN_NOCHE = doc["noche"]["temp_min"];
+  HUMEDAD_MIN_NOCHE = doc["noche"]["humedad_min"];
+  HUMEDAD_CANCELAR = doc["cancelacion"]["humedad_cancelar"];
+  CAUDAL_SIMULADO = doc["simulacion"]["caudal_lpm"];
+  POTENCIA_SIMULADA = doc["simulacion"]["potencia_watts"];
+
+  file.close();
+  Serial.println("Umbrales cargados desde JSON");
+}
+
 // ===== CONFIGURACIÓN INICIAL =====
 void setup() {
   Serial.begin(115200);
@@ -72,6 +121,16 @@ void setup() {
   Serial.println("║  Control Horario + Consumo                 ║");
   Serial.println("╚════════════════════════════════════════════╝\n");
   
+
+  if (!SPIFFS.begin()) {
+    Serial.println("❌ Error al montar sistema de archivos SPIFFS");
+    return;
+  }
+
+  // Cargar archivos JSON
+  cargarCredenciales();
+  cargarUmbrales();
+
   // Configurar pines
   pinMode(PIN_RIEGO, OUTPUT);
   pinMode(LED_INTERNO, OUTPUT);

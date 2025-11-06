@@ -1,0 +1,18 @@
+{
+  "dia": {
+    "temp_max": 30.0,
+    "luz_max": 50000.0,
+    "humedad_min": 35
+  },
+  "noche": {
+    "temp_min": 12.0,
+    "humedad_min": 30
+  },
+  "cancelacion": {
+    "humedad_cancelar": 70
+  },
+  "simulacion": {
+    "caudal_lpm": 1.5,
+    "potencia_watts": 15.0
+  }
+}

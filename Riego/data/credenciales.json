@@ -1,0 +1,14 @@
+{
+    "wifi": { 
+        "ssid": "gnicoool",
+        "password": "gironJ12"
+    },
+    "blynk" : {
+        "template_id": "TMPL2EYZWJiJP",
+        "template_name": "CONTROL LED",
+        "auth_token": "H8Saafs-gCgDHx5JjC7doWJRGjkPZczp"
+    },
+    "google_sheets": {
+        "script_id": "AKfycbyZzibz7ylOoFRXfCum_eJkePaoUsU8vywMmqS2IebXjrNQ7hvLVJYyH6aQNKz1NsR_"
+    }
+}
