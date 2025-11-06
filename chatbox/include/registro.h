@@ -1,0 +1,1 @@
+// chatbox/include/registro.h (Enya)

@@ -1,0 +1,1 @@
+// chatbox/include/sensores.h (Jacky)
